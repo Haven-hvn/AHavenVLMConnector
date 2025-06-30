@@ -1,0 +1,273 @@
+"""
+Haven VLM Engine Integration Module
+Provides integration with the Haven VLM Engine for video and image processing
+"""
+
+import asyncio
+import logging
+from typing import Any, Dict, List, Optional, Set, Union
+from dataclasses import dataclass
+from datetime import datetime
+import json
+
+# Use PythonDepManager for dependency management
+try:
+    from PythonDepManager import ensure_import
+    ensure_import("vlm-engine>=1.0.0")
+    
+    from vlm_engine import VLMEngine
+    from vlm_engine.config_models import (
+        EngineConfig, 
+        PipelineConfig, 
+        ModelConfig, 
+        PipelineModelConfig
+    )
+except ImportError as e:
+    logging.error(f"Haven VLM Engine not found: {e}")
+    logging.error("Please ensure PythonDepManager is available and vlm-engine is accessible")
+    raise
+
+import haven_vlm_config as config
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+@dataclass
+class TimeFrame:
+    """Represents a time frame with start and end times"""
+    start: float
+    end: float
+    total_confidence: Optional[float] = None
+
+    def to_json(self) -> str:
+        """Convert to JSON string"""
+        return json.dumps({
+            "start": self.start,
+            "end": self.end,
+            "total_confidence": self.total_confidence
+        })
+
+    def __str__(self) -> str:
+        return f"TimeFrame(start={self.start}, end={self.end}, confidence={self.total_confidence})"
+
+@dataclass
+class VideoTagInfo:
+    """Represents video tagging information"""
+    video_duration: float
+    video_tags: Dict[str, Set[str]]
+    tag_totals: Dict[str, Dict[str, float]]
+    tag_timespans: Dict[str, Dict[str, List[TimeFrame]]]
+
+    @classmethod
+    def from_json(cls, json_data: Dict[str, Any]) -> 'VideoTagInfo':
+        """Create VideoTagInfo from JSON data"""
+        logger.debug(f"Creating VideoTagInfo from JSON: {json_data}")
+        
+        # Convert tag_timespans to TimeFrame objects
+        tag_timespans = {}
+        for category, tags in json_data.get("tag_timespans", {}).items():
+            tag_timespans[category] = {}
+            for tag_name, timeframes in tags.items():
+                tag_timespans[category][tag_name] = [
+                    TimeFrame(
+                        start=tf["start"],
+                        end=tf["end"],
+                        total_confidence=tf.get("total_confidence")
+                    ) for tf in timeframes
+                ]
+        
+        return cls(
+            video_duration=json_data["video_duration"],
+            video_tags=json_data["video_tags"],
+            tag_totals=json_data["tag_totals"],
+            tag_timespans=tag_timespans
+        )
+
+    def __str__(self) -> str:
+        return f"VideoTagInfo(duration={self.video_duration}, tags={len(self.video_tags)}, timespans={len(self.tag_timespans)})"
+
+class HavenVLMEngine:
+    """Main VLM Engine integration class"""
+    
+    def __init__(self):
+        self.engine: Optional[VLMEngine] = None
+        self.engine_config: Optional[EngineConfig] = None
+        self._initialized = False
+
+    async def initialize(self) -> None:
+        """Initialize the VLM Engine with configuration"""
+        if self._initialized:
+            return
+
+        try:
+            logger.info("Initializing Haven VLM Engine...")
+            
+            # Convert config dict to EngineConfig objects
+            self.engine_config = self._create_engine_config()
+            
+            # Create and initialize the engine
+            self.engine = VLMEngine(config=self.engine_config)
+            await self.engine.initialize()
+            
+            self._initialized = True
+            logger.info("Haven VLM Engine initialized successfully")
+            
+        except Exception as e:
+            logger.error(f"Failed to initialize VLM Engine: {e}")
+            raise
+
+    def _create_engine_config(self) -> EngineConfig:
+        """Create EngineConfig from the configuration"""
+        vlm_config = config.config.vlm_engine_config
+        
+        # Create pipeline configs
+        pipelines = {}
+        for pipeline_name, pipeline_data in vlm_config["pipelines"].items():
+            models = [
+                PipelineModelConfig(
+                    name=model["name"],
+                    inputs=model["inputs"],
+                    outputs=model["outputs"]
+                ) for model in pipeline_data["models"]
+            ]
+            
+            pipelines[pipeline_name] = PipelineConfig(
+                inputs=pipeline_data["inputs"],
+                output=pipeline_data["output"],
+                short_name=pipeline_data["short_name"],
+                version=pipeline_data["version"],
+                models=models
+            )
+
+        # Create model configs
+        models = {}
+        for model_name, model_data in vlm_config["models"].items():
+            if model_data["type"] == "vlm_model":
+                models[model_name] = ModelConfig(
+                    type=model_data["type"],
+                    model_file_name=model_data["model_file_name"],
+                    model_category=model_data["model_category"],
+                    model_id=model_data["model_id"],
+                    model_identifier=model_data["model_identifier"],
+                    model_version=model_data["model_version"],
+                    use_multiplexer=model_data.get("use_multiplexer", False),
+                    max_concurrent_requests=model_data.get("max_concurrent_requests", 10),
+                    connection_pool_size=model_data.get("connection_pool_size", 20),
+                    multiplexer_endpoints=model_data.get("multiplexer_endpoints", []),
+                    tag_list=model_data.get("tag_list", [])
+                )
+            else:
+                models[model_name] = ModelConfig(
+                    type=model_data["type"],
+                    model_file_name=model_data["model_file_name"]
+                )
+
+        return EngineConfig(
+            active_ai_models=vlm_config["active_ai_models"],
+            pipelines=pipelines,
+            models=models,
+            category_config=vlm_config["category_config"]
+        )
+
+    async def process_video(
+        self,
+        video_path: str,
+        vr_video: bool = False,
+        frame_interval: Optional[float] = None,
+        threshold: Optional[float] = None,
+        return_confidence: Optional[bool] = None,
+        existing_json: Optional[Dict[str, Any]] = None
+    ) -> VideoTagInfo:
+        """Process a video using the VLM Engine"""
+        if not self._initialized:
+            await self.initialize()
+
+        try:
+            logger.info(f"Processing video: {video_path}")
+            
+            # Use config defaults if not provided
+            frame_interval = frame_interval or config.config.video_frame_interval
+            threshold = threshold or config.config.video_threshold
+            return_confidence = return_confidence if return_confidence is not None else config.config.video_confidence_return
+
+            # Process video through the engine
+            results = await self.engine.process_video(
+                video_path,
+                frame_interval=frame_interval
+            )
+            
+            logger.info(f"Video processing completed for: {video_path}")
+            return VideoTagInfo.from_json(results)
+            
+        except Exception as e:
+            logger.error(f"Error processing video {video_path}: {e}")
+            raise
+
+    async def find_optimal_marker_settings(
+        self,
+        existing_json: Dict[str, Any],
+        desired_timespan_data: Dict[str, TimeFrame]
+    ) -> Dict[str, Any]:
+        """Find optimal marker settings based on existing data"""
+        if not self._initialized:
+            await self.initialize()
+
+        try:
+            logger.info("Finding optimal marker settings...")
+            
+            # Convert TimeFrame objects to dict format
+            desired_data = {}
+            for key, timeframe in desired_timespan_data.items():
+                desired_data[key] = {
+                    "start": timeframe.start,
+                    "end": timeframe.end,
+                    "total_confidence": timeframe.total_confidence
+                }
+
+            # Call the engine's optimization method
+            results = await self.engine.optimize_timeframe_settings(
+                existing_json_data=existing_json,
+                desired_timespan_data=desired_data
+            )
+            
+            logger.info("Optimal marker settings found")
+            return results
+            
+        except Exception as e:
+            logger.error(f"Error finding optimal marker settings: {e}")
+            raise
+
+    async def shutdown(self) -> None:
+        """Shutdown the VLM Engine"""
+        if self.engine and self._initialized:
+            try:
+                await self.engine.shutdown()
+                self._initialized = False
+                logger.info("VLM Engine shutdown completed")
+            except Exception as e:
+                logger.error(f"Error during VLM Engine shutdown: {e}")
+
+# Global VLM Engine instance
+vlm_engine = HavenVLMEngine()
+
+# Convenience functions for backward compatibility
+async def process_video_async(
+    video_path: str,
+    vr_video: bool = False,
+    frame_interval: Optional[float] = None,
+    threshold: Optional[float] = None,
+    return_confidence: Optional[bool] = None,
+    existing_json: Optional[Dict[str, Any]] = None
+) -> VideoTagInfo:
+    """Process video asynchronously"""
+    return await vlm_engine.process_video(
+        video_path, vr_video, frame_interval, threshold, return_confidence, existing_json
+    )
+
+async def find_optimal_marker_settings_async(
+    existing_json: Dict[str, Any],
+    desired_timespan_data: Dict[str, TimeFrame]
+) -> Dict[str, Any]:
+    """Find optimal marker settings asynchronously"""
+    return await vlm_engine.find_optimal_marker_settings(existing_json, desired_timespan_data) 
