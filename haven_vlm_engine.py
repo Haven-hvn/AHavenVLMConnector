@@ -11,21 +11,13 @@ from datetime import datetime
 import json
 
 # Use PythonDepManager for dependency management
-try:
-    from PythonDepManager import ensure_import
-    ensure_import("vlm-engine==0.1.1")
-    
-    from vlm_engine import VLMEngine
-    from vlm_engine.config_models import (
-        EngineConfig, 
-        PipelineConfig, 
-        ModelConfig, 
-        PipelineModelConfig
-    )
-except ImportError as e:
-    logging.error(f"Haven VLM Engine not found: {e}")
-    logging.error("Please ensure PythonDepManager is available and vlm-engine is accessible")
-    raise
+from vlm_engine import VLMEngine
+from vlm_engine.config_models import (
+    EngineConfig, 
+    PipelineConfig, 
+    ModelConfig, 
+    PipelineModelConfig
+)
 
 import haven_vlm_config as config
 
