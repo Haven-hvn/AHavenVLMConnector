@@ -29,7 +29,7 @@ A StashApp plugin for Vision-Language Model (VLM) based content tagging and anal
 
 The plugin automatically manages all dependencies:
 - `stashapp-tools>=0.2.58` (StashApp API)
-- `aiohttp>=3.8.0` (Async HTTP)
+- `aiohttp>=3.12.13` (Async HTTP)
 - `pydantic>=2.0.0` (Data validation)
 - `vlm-engine>=1.0.0` (Haven VLM Engine)
 - `pyyaml>=6.0.0` (YAML configuration)

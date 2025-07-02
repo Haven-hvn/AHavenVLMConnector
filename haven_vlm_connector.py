@@ -22,7 +22,7 @@ try:
     # Install and ensure all required dependencies with specific versions
     ensure_import(
         "stashapi:stashapp-tools==0.2.58",
-        "aiohttp==3.8.0",
+        "aiohttp==3.12.13",
         "pydantic==2.0.0",
         "vlm-engine==0.1.1",
         "pyyaml==6.0.0"

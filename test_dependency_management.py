@@ -82,7 +82,7 @@ class TestPythonDepManagerIntegration(unittest.TestCase):
             call_args = self.mock_python_dep_manager.ensure_import.call_args[0][0]
             expected_dependencies = [
                 "stashapi:stashapp-tools>=0.2.58",
-                "aiohttp>=3.8.0",
+                "aiohttp==3.12.13",
                 "pydantic>=2.0.0",
                 "vlm-engine>=1.0.0",
                 "pyyaml>=6.0.0"
