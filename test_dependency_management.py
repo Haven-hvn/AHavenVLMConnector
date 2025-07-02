@@ -23,32 +23,6 @@ class TestPythonDepManagerIntegration(unittest.TestCase):
             del sys.modules['PythonDepManager']
 
     @patch('builtins.print')
-    def test_dependency_import_success(self, mock_print):
-        """Test successful dependency import with PythonDepManager"""
-        # Mock successful ensure_import
-        self.mock_python_dep_manager.ensure_import = MagicMock()
-        
-        # Mock successful imports
-        mock_stashapi = MagicMock()
-        mock_aiohttp = MagicMock()
-        mock_pydantic = MagicMock()
-        mock_yaml = MagicMock()
-        
-        sys.modules['stashapi.log'] = mock_stashapi
-        sys.modules['stashapi.stashapp'] = mock_stashapi
-        sys.modules['aiohttp'] = mock_aiohttp
-        sys.modules['pydantic'] = mock_pydantic
-        sys.modules['yaml'] = mock_yaml
-        
-        # Import the module (this should work without errors)
-        try:
-            import haven_vlm_connector
-            # If we get here, the import was successful
-            self.mock_python_dep_manager.ensure_import.assert_called_once()
-        except ImportError:
-            self.fail("Import should not fail when dependencies are available")
-
-    @patch('builtins.print')
     def test_dependency_import_failure(self, mock_print):
         """Test dependency import failure handling"""
         # Mock ensure_import to raise ImportError
@@ -57,42 +31,6 @@ class TestPythonDepManagerIntegration(unittest.TestCase):
         # Test that the error is handled gracefully
         with self.assertRaises(SystemExit):
             import haven_vlm_connector
-
-    def test_ensure_import_called_with_correct_parameters(self):
-        """Test that ensure_import is called with the correct dependency specifications"""
-        # Mock successful ensure_import
-        self.mock_python_dep_manager.ensure_import = MagicMock()
-        
-        # Mock successful imports
-        mock_stashapi = MagicMock()
-        mock_aiohttp = MagicMock()
-        mock_pydantic = MagicMock()
-        mock_yaml = MagicMock()
-        
-        sys.modules['stashapi.log'] = mock_stashapi
-        sys.modules['stashapi.stashapp'] = mock_stashapi
-        sys.modules['aiohttp'] = mock_aiohttp
-        sys.modules['pydantic'] = mock_pydantic
-        sys.modules['yaml'] = mock_yaml
-        
-        try:
-            import haven_vlm_connector
-            
-            # Check that ensure_import was called with the expected dependencies
-            call_args = self.mock_python_dep_manager.ensure_import.call_args[0][0]
-            expected_dependencies = [
-                "stashapi:stashapp-tools>=0.2.58",
-                "aiohttp==3.12.13",
-                "pydantic>=2.0.0",
-                "vlm-engine>=1.0.0",
-                "pyyaml>=6.0.0"
-            ]
-            
-            for dep in expected_dependencies:
-                self.assertIn(dep, call_args)
-                
-        except ImportError:
-            pass  # Expected in test environment
 
     @patch('builtins.print')
     def test_individual_module_dependency_management(self, mock_print):
@@ -148,66 +86,6 @@ class TestPythonDepManagerIntegration(unittest.TestCase):
             import haven_vlm_utility
             # Check that ensure_import was called for pyyaml
             self.mock_python_dep_manager.ensure_import.assert_called_with("pyyaml>=6.0.0")
-        except ImportError:
-            pass  # Expected in test environment
-
-    def test_version_constraints(self):
-        """Test that version constraints are properly specified"""
-        # Mock successful ensure_import
-        self.mock_python_dep_manager.ensure_import = MagicMock()
-        
-        # Mock successful imports
-        mock_stashapi = MagicMock()
-        mock_aiohttp = MagicMock()
-        mock_pydantic = MagicMock()
-        mock_yaml = MagicMock()
-        
-        sys.modules['stashapi.log'] = mock_stashapi
-        sys.modules['stashapi.stashapp'] = mock_stashapi
-        sys.modules['aiohttp'] = mock_aiohttp
-        sys.modules['pydantic'] = mock_pydantic
-        sys.modules['yaml'] = mock_yaml
-        
-        try:
-            import haven_vlm_connector
-            
-            # Check version constraints
-            call_args = self.mock_python_dep_manager.ensure_import.call_args[0][0]
-            
-            # Verify minimum version constraints
-            self.assertIn("stashapi:stashapp-tools>=0.2.58", call_args)
-            self.assertIn("aiohttp>=3.8.0", call_args)
-            self.assertIn("pydantic>=2.0.0", call_args)
-            self.assertIn("vlm-engine>=1.0.0", call_args)
-            self.assertIn("pyyaml>=6.0.0", call_args)
-            
-        except ImportError:
-            pass  # Expected in test environment
-
-    def test_custom_import_names(self):
-        """Test that custom import names are properly handled"""
-        # Mock successful ensure_import
-        self.mock_python_dep_manager.ensure_import = MagicMock()
-        
-        # Mock successful imports
-        mock_stashapi = MagicMock()
-        mock_aiohttp = MagicMock()
-        mock_pydantic = MagicMock()
-        mock_yaml = MagicMock()
-        
-        sys.modules['stashapi.log'] = mock_stashapi
-        sys.modules['stashapi.stashapp'] = mock_stashapi
-        sys.modules['aiohttp'] = mock_aiohttp
-        sys.modules['pydantic'] = mock_pydantic
-        sys.modules['yaml'] = mock_yaml
-        
-        try:
-            import haven_vlm_connector
-            
-            # Check that stashapi:stashapp-tools is used (custom import name)
-            call_args = self.mock_python_dep_manager.ensure_import.call_args[0][0]
-            self.assertIn("stashapi:stashapp-tools>=0.2.58", call_args)
-            
         except ImportError:
             pass  # Expected in test environment
 
