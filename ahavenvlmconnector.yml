@@ -2,7 +2,7 @@ name: A Haven VLM Connector
 description: Tag videos with Vision-Language Models using any OpenAI-compatible VLM endpoint
 version: 1.0.0
 url: https://github.com/stashapp/CommunityScripts/tree/main/plugins/AHavenVLMConnector
-requires: PythonDepManager
+# requires: PythonDepManager
 exec:
   - python
   - "{pluginDir}/haven_vlm_connector.py"
