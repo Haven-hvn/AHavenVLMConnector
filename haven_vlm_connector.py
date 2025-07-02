@@ -53,7 +53,7 @@ except ModuleNotFoundError:
 
 import haven_media_handler as media_handler
 import haven_vlm_engine as vlm_engine
-from haven_vlm_engine import TimeFrame, VideoTagInfo, ImageResult
+from haven_vlm_engine import TimeFrame
 
 log.debug("Python instance is running at: " + sys.executable)
 
