@@ -6,6 +6,7 @@ A StashApp plugin for Vision-Language Model based content tagging
 from typing import Dict, List, Optional
 from dataclasses import dataclass
 import os
+import yaml
 
 # ----------------- Core Settings -----------------
 
