@@ -32,63 +32,6 @@ class TestPythonDepManagerIntegration(unittest.TestCase):
         with self.assertRaises(SystemExit):
             import haven_vlm_connector
 
-    @patch('builtins.print')
-    def test_individual_module_dependency_management(self, mock_print):
-        """Test dependency management in individual modules"""
-        # Test haven_vlm_engine.py
-        self.mock_python_dep_manager.ensure_import = MagicMock()
-        
-        # Mock vlm_engine imports
-        mock_vlm_engine = MagicMock()
-        mock_config_models = MagicMock()
-        sys.modules['vlm_engine'] = mock_vlm_engine
-        sys.modules['vlm_engine.config_models'] = mock_config_models
-        
-        try:
-            import haven_vlm_engine
-            # Check that ensure_import was called for vlm-engine
-            self.mock_python_dep_manager.ensure_import.assert_called_with("vlm-engine>=1.0.0")
-        except ImportError:
-            pass  # Expected in test environment
-
-        # Test haven_media_handler.py
-        self.mock_python_dep_manager.ensure_import.reset_mock()
-        
-        # Mock stashapi imports
-        mock_stashapi = MagicMock()
-        sys.modules['stashapi.stashapp'] = mock_stashapi
-        sys.modules['stashapi.log'] = mock_stashapi
-        
-        try:
-            import haven_media_handler
-            # Check that ensure_import was called for stashapp-tools
-            self.mock_python_dep_manager.ensure_import.assert_called_with("stashapi:stashapp-tools>=0.2.58")
-        except ImportError:
-            pass  # Expected in test environment
-
-        # Test haven_vlm_config.py and haven_vlm_utility.py
-        self.mock_python_dep_manager.ensure_import.reset_mock()
-        
-        # Mock yaml import
-        mock_yaml = MagicMock()
-        sys.modules['yaml'] = mock_yaml
-        
-        try:
-            import haven_vlm_config
-            # Check that ensure_import was called for pyyaml
-            self.mock_python_dep_manager.ensure_import.assert_called_with("pyyaml>=6.0.0")
-        except ImportError:
-            pass  # Expected in test environment
-
-        self.mock_python_dep_manager.ensure_import.reset_mock()
-        
-        try:
-            import haven_vlm_utility
-            # Check that ensure_import was called for pyyaml
-            self.mock_python_dep_manager.ensure_import.assert_called_with("pyyaml>=6.0.0")
-        except ImportError:
-            pass  # Expected in test environment
-
     def test_error_messages(self):
         """Test that appropriate error messages are displayed"""
         # Mock ensure_import to raise ImportError

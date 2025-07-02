@@ -10,7 +10,7 @@ import os
 # Use PythonDepManager for dependency management
 try:
     from PythonDepManager import ensure_import
-    ensure_import("pyyaml==6.0.0")
+    ensure_import("pyyaml==6.0.2")
     import yaml
 except ImportError as e:
     print(f"pyyaml not found: {e}")
