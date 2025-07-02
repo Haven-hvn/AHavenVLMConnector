@@ -10,7 +10,7 @@ import os
 # Use PythonDepManager for dependency management
 try:
     from PythonDepManager import ensure_import
-    ensure_import("pyyaml>=6.0.0")
+    ensure_import("pyyaml==6.0.0")
     import yaml
 except ImportError as e:
     print(f"pyyaml not found: {e}")
@@ -362,6 +362,7 @@ VLM_ENGINE_CONFIG = {
             "TagThreshold": 0.5,
         },
     }
+}
 }
 
 # ----------------- Processing Settings -----------------

@@ -13,7 +13,7 @@ import json
 # Use PythonDepManager for dependency management
 try:
     from PythonDepManager import ensure_import
-    ensure_import("vlm-engine>=1.0.0")
+    ensure_import("vlm-engine==0.1.1")
     
     from vlm_engine import VLMEngine
     from vlm_engine.config_models import (
