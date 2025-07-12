@@ -190,7 +190,18 @@ class HavenVLMEngine:
             )
             
             logger.info(f"Video processing completed for: {video_path}")
-            return VideoTagInfo.from_json(results)
+            logger.debug(f"Raw results structure: {type(results)}")
+            
+            # Extract video_tag_info from the nested structure
+            if isinstance(results, dict) and 'video_tag_info' in results:
+                video_tag_data = results['video_tag_info']
+                logger.debug(f"Using video_tag_info from results: {video_tag_data.keys()}")
+            else:
+                # Fallback: assume results is already in the correct format
+                video_tag_data = results
+                logger.debug(f"Using results directly: {video_tag_data.keys() if isinstance(video_tag_data, dict) else type(video_tag_data)}")
+            
+            return VideoTagInfo.from_json(video_tag_data)
             
         except Exception as e:
             logger.error(f"Error processing video {video_path}: {e}")
@@ -234,11 +245,13 @@ class HavenVLMEngine:
         """Shutdown the VLM Engine"""
         if self.engine and self._initialized:
             try:
-                await self.engine.shutdown()
+                # VLMEngine doesn't have a shutdown method, just perform basic cleanup
+                logger.info("VLM Engine cleanup completed")
                 self._initialized = False
-                logger.info("VLM Engine shutdown completed")
+                
             except Exception as e:
-                logger.error(f"Error during VLM Engine shutdown: {e}")
+                logger.error(f"Error during VLM Engine cleanup: {e}")
+                self._initialized = False
 
 # Global VLM Engine instance
 vlm_engine = HavenVLMEngine()
@@ -262,4 +275,4 @@ async def find_optimal_marker_settings_async(
     desired_timespan_data: Dict[str, TimeFrame]
 ) -> Dict[str, Any]:
     """Find optimal marker settings asynchronously"""
-    return await vlm_engine.find_optimal_marker_settings(existing_json, desired_timespan_data) 
+    return await vlm_engine.find_optimal_marker_settings(existing_json, desired_timespan_data)
