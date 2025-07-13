@@ -42,9 +42,9 @@ VLM_ENGINE_CONFIG = {
         }
     },
     "models": {
-        "video_preprocessor_dynamic": {
-            "type": "video_preprocessor", 
-            "model_file_name": "video_preprocessor_dynamic"
+        "binary_search_processor_dynamic": {
+            "type": "binary_search_processor", 
+            "model_file_name": "binary_search_processor_dynamic"
         },
         "vlm_multiplexer_model": {
             "type": "vlm_model",
