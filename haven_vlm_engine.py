@@ -145,6 +145,8 @@ class HavenVLMEngine:
                     model_version=model_data["model_version"],
                     use_multiplexer=model_data.get("use_multiplexer", False),
                     max_concurrent_requests=model_data.get("max_concurrent_requests", 10),
+                    instance_count=model_data.get("instance_count",1),
+                    max_batch_size=model_data.get("max_batch_size",1),
                     connection_pool_size=model_data.get("connection_pool_size", 20),
                     multiplexer_endpoints=model_data.get("multiplexer_endpoints", []),
                     tag_list=model_data.get("tag_list", [])

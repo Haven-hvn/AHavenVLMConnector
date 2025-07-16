@@ -62,6 +62,8 @@ log.debug("Python instance is running at: " + sys.executable)
 semaphore: Optional[asyncio.Semaphore] = None
 progress: float = 0.0
 increment: float = 0.0
+completed_tasks: int = 0
+total_tasks: int = 0
 
 # ----------------- Main Execution -----------------
 
@@ -115,15 +117,50 @@ async def run(json_input: Dict[str, Any], output: Dict[str, Any]) -> None:
 # ----------------- High Level Processing Functions -----------------
 
 async def tag_videos() -> None:
-    """Tag videos with VLM analysis"""
-    global increment
+    """Tag videos with VLM analysis using improved async orchestration"""
+    global completed_tasks, total_tasks
+    
     scenes = media_handler.get_tagme_scenes()
-    if scenes:
-        increment = 1.0 / len(scenes)
-        tasks = [__tag_video(scene) for scene in scenes]
-        await asyncio.gather(*tasks)
-    else:
+    if not scenes:
         log.info("No videos to tag. Have you tagged any scenes with the VLM_TagMe tag to get processed?")
+        return
+    
+    total_tasks = len(scenes)
+    completed_tasks = 0
+    
+    log.info(f"🚀 Starting video processing for {total_tasks} scenes with semaphore limit of {config.config.concurrent_task_limit}")
+    
+    # Create tasks with proper indexing for debugging
+    tasks = [
+        asyncio.create_task(__tag_video_with_timing(scene, i))
+        for i, scene in enumerate(scenes)
+    ]
+    
+    # Use asyncio.as_completed to process results as they finish (proves concurrency)
+    completed_task_futures = asyncio.as_completed(tasks)
+    
+    batch_start_time = asyncio.get_event_loop().time()
+    
+    for completed_task in completed_task_futures:
+        try:
+            await completed_task
+            completed_tasks += 1
+            
+            # Log progress every completed task
+            progress_percent = (completed_tasks / total_tasks) * 100
+            elapsed_time = asyncio.get_event_loop().time() - batch_start_time
+            avg_time_per_task = elapsed_time / completed_tasks if completed_tasks > 0 else 0
+            estimated_remaining = (total_tasks - completed_tasks) * avg_time_per_task
+            
+            log.info(f"🏁 Task {completed_tasks}/{total_tasks} completed ({progress_percent:.1f}%) - "
+                    f"Avg: {avg_time_per_task:.2f}s/task, Est. remaining: {estimated_remaining:.1f}s")
+                    
+        except Exception as e:
+            completed_tasks += 1
+            log.error(f"❌ Task failed: {e}")
+    
+    total_time = asyncio.get_event_loop().time() - batch_start_time
+    log.info(f"🎉 All {total_tasks} videos completed in {total_time:.2f}s (avg: {total_time/total_tasks:.2f}s/video)")
 
 async def find_marker_settings() -> None:
     """Find optimal marker settings based on a single tagged video"""
@@ -243,6 +280,25 @@ async def __tag_images(images: List[Dict[str, Any]]) -> None:
                 except Exception as e:
                     log.debug(f"Failed to remove temp file {temp_file}: {e}")
 
+async def __tag_video_with_timing(scene: Dict[str, Any], scene_index: int) -> None:
+    """Tag a single video scene with timing diagnostics"""
+    start_time = asyncio.get_event_loop().time()
+    scene_id = scene.get('id', 'unknown')
+    
+    log.info(f"🎬 Starting video {scene_index + 1}: Scene {scene_id}")
+    
+    try:
+        await __tag_video(scene)
+        end_time = asyncio.get_event_loop().time()
+        duration = end_time - start_time
+        log.info(f"✅ Completed video {scene_index + 1} (Scene {scene_id}) in {duration:.2f}s")
+        
+    except Exception as e:
+        end_time = asyncio.get_event_loop().time()
+        duration = end_time - start_time
+        log.error(f"❌ Failed video {scene_index + 1} (Scene {scene_id}) after {duration:.2f}s: {e}")
+        raise
+
 async def __tag_video(scene: Dict[str, Any]) -> None:
     """Tag a single video scene"""
     async with semaphore:
@@ -341,4 +397,4 @@ if __name__ == "__main__":
         log.error(f"Plugin failed: {e}")
         sys.exit(1)
     finally:
-        asyncio.run(cleanup()) 
+        asyncio.run(cleanup())

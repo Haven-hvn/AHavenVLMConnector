@@ -54,8 +54,10 @@ VLM_ENGINE_CONFIG = {
             "model_identifier": 93848,
             "model_version": "1.0",
             "use_multiplexer": True,
-            "max_concurrent_requests": 30,
+            "max_concurrent_requests": 40,
             "connection_pool_size": 100,
+            "instance_count": 10,
+            "max_batch_size": 4,
             "multiplexer_endpoints": [
                 {
                     "base_url": "http://localhost:1234/v1",
@@ -364,7 +366,7 @@ VIDEO_THRESHOLD = 0.3
 VIDEO_CONFIDENCE_RETURN = True
 
 # Concurrency settings
-CONCURRENT_TASK_LIMIT = 10
+CONCURRENT_TASK_LIMIT = 20  # Increased for better parallel video processing
 SERVER_TIMEOUT = 3700
 
 # ----------------- Tag Configuration -----------------
@@ -439,4 +441,4 @@ def load_config_from_yaml(config_path: Optional[str] = None) -> VLMConnectorConf
     )
 
 # Global configuration instance
-config = load_config_from_yaml() 
+config = load_config_from_yaml()
