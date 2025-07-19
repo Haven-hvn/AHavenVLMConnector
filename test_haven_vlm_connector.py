@@ -293,6 +293,11 @@ class TestLowLevelProcessingFunctions(unittest.TestCase):
         asyncio.run(haven_vlm_connector.__tag_video(mock_scene))
         
         mock_vlm_engine.process_video_async.assert_called_once()
+        
+        # Verify tags and markers were cleared before adding new ones
+        mock_media_handler.clear_all_tags_from_video.assert_called_once_with(1)
+        mock_media_handler.clear_all_markers_from_video.assert_called_once_with(1)
+        
         mock_media_handler.add_tags_to_video.assert_called_once()
         mock_media_handler.remove_tagme_tag_from_scene.assert_called_once()
 
@@ -434,6 +439,10 @@ class TestErrorHandling(unittest.TestCase):
             mock_semaphore.__aexit__ = AsyncMock()
             
             asyncio.run(haven_vlm_connector.__tag_video(mock_scene))
+        
+        # Verify clearing functions are NOT called when no tags are detected
+        mock_media_handler.clear_all_tags_from_video.assert_not_called()
+        mock_media_handler.clear_all_markers_from_video.assert_not_called()
         
         mock_media_handler.remove_tagme_tag_from_scene.assert_called_once()
 

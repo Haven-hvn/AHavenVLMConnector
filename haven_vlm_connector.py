@@ -24,7 +24,7 @@ try:
         "stashapi:stashapp-tools==0.2.58",
         "aiohttp==3.12.13",
         "pydantic==2.11.7",
-        "vlm-engine==0.3.9",
+        "vlm-engine==0.3.9996",
         "pyyaml==6.0.2"
     )
     
@@ -64,6 +64,7 @@ progress: float = 0.0
 increment: float = 0.0
 completed_tasks: int = 0
 total_tasks: int = 0
+video_progress: Dict[str, float] = {}
 
 # ----------------- Main Execution -----------------
 
@@ -128,6 +129,11 @@ async def tag_videos() -> None:
     total_tasks = len(scenes)
     completed_tasks = 0
     
+    video_progress.clear()
+    for scene in scenes:
+        video_progress[scene['id']] = 0.0
+    log.progress(0.0)
+    
     log.info(f"🚀 Starting video processing for {total_tasks} scenes with semaphore limit of {config.config.concurrent_task_limit}")
     
     # Create tasks with proper indexing for debugging
@@ -161,6 +167,7 @@ async def tag_videos() -> None:
     
     total_time = asyncio.get_event_loop().time() - batch_start_time
     log.info(f"🎉 All {total_tasks} videos completed in {total_time:.2f}s (avg: {total_time/total_tasks:.2f}s/video)")
+    log.progress(1.0)
 
 async def find_marker_settings() -> None:
     """Find optimal marker settings based on a single tagged video"""
@@ -309,13 +316,20 @@ async def __tag_video(scene: Dict[str, Any]) -> None:
             # Check if scene is VR
             is_vr = media_handler.is_vr_scene(scene['tags'])
             
+            def progress_cb(p: int) -> None:
+                global video_progress, total_tasks
+                video_progress[scene_id] = p / 100.0
+                total_prog = sum(video_progress.values()) / total_tasks
+                log.progress(total_prog)
+            
             # Process video through VLM Engine
             video_result = await vlm_engine.process_video_async(
                 scene_file,
                 vr_video=is_vr,
                 frame_interval=config.config.video_frame_interval,
                 threshold=config.config.video_threshold,
-                return_confidence=config.config.video_confidence_return
+                return_confidence=config.config.video_confidence_return,
+                progress_callback=progress_cb
             )
 
             # Extract detected tags
@@ -324,6 +338,10 @@ async def __tag_video(scene: Dict[str, Any]) -> None:
                 detected_tags.update(category_tags)
 
             if detected_tags:
+                # Clear all existing tags and markers before adding new ones
+                media_handler.clear_all_tags_from_video(scene_id)
+                media_handler.clear_all_markers_from_video(scene_id)
+                
                 # Add tags to scene
                 tag_ids = media_handler.get_tag_ids(list(detected_tags), create=True)
                 media_handler.add_tags_to_video(scene_id, tag_ids)

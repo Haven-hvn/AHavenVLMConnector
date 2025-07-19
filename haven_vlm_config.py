@@ -361,7 +361,7 @@ VLM_ENGINE_CONFIG = {
 # ----------------- Processing Settings -----------------
 
 # Video processing settings
-VIDEO_FRAME_INTERVAL = 30  # Process every 30 seconds
+VIDEO_FRAME_INTERVAL = 80  # Process every 80 seconds
 VIDEO_THRESHOLD = 0.3
 VIDEO_CONFIDENCE_RETURN = True
 

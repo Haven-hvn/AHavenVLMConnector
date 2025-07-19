@@ -5,7 +5,7 @@ Provides integration with the Haven VLM Engine for video and image processing
 
 import asyncio
 import logging
-from typing import Any, Dict, List, Optional, Set, Union
+from typing import Any, Dict, List, Optional, Set, Union, Callable
 from dataclasses import dataclass
 from datetime import datetime
 import json
@@ -171,7 +171,8 @@ class HavenVLMEngine:
         frame_interval: Optional[float] = None,
         threshold: Optional[float] = None,
         return_confidence: Optional[bool] = None,
-        existing_json: Optional[Dict[str, Any]] = None
+        existing_json: Optional[Dict[str, Any]] = None,
+        progress_callback: Optional[Callable[[int], None]] = None
     ) -> VideoTagInfo:
         """Process a video using the VLM Engine"""
         if not self._initialized:
@@ -188,7 +189,8 @@ class HavenVLMEngine:
             # Process video through the engine
             results = await self.engine.process_video(
                 video_path,
-                frame_interval=frame_interval
+                frame_interval=frame_interval,
+                progress_callback=progress_callback
             )
             
             logger.info(f"Video processing completed for: {video_path}")
@@ -265,11 +267,13 @@ async def process_video_async(
     frame_interval: Optional[float] = None,
     threshold: Optional[float] = None,
     return_confidence: Optional[bool] = None,
-    existing_json: Optional[Dict[str, Any]] = None
+    existing_json: Optional[Dict[str, Any]] = None,
+    progress_callback: Optional[Callable[[int], None]] = None
 ) -> VideoTagInfo:
     """Process video asynchronously"""
     return await vlm_engine.process_video(
-        video_path, vr_video, frame_interval, threshold, return_confidence, existing_json
+        video_path, vr_video, frame_interval, threshold, return_confidence, existing_json,
+        progress_callback=progress_callback
     )
 
 async def find_optimal_marker_settings_async(
