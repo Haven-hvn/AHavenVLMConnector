@@ -138,18 +138,15 @@ def add_tags_to_video(video_id: int, tag_ids: List[int], add_tagged: bool = True
         "tag_ids": {"ids": tag_ids, "mode": "ADD"}
     })
 
-def clear_all_tags_from_video(video_id: int) -> None:
-    """Clear all tags from a video scene"""
-    # Get the scene to find all current tags
-    scene = stash.get_scene(video_id)
-    if scene and scene.get('tags'):
-        current_tag_ids = [tag['id'] for tag in scene['tags']]
-        if current_tag_ids:
-            stash.update_scenes({
-                "ids": [video_id], 
-                "tag_ids": {"ids": current_tag_ids, "mode": "REMOVE"}
-            })
-            log.info(f"Cleared all tags from scene {video_id}")
+def clear_all_tags_from_video(scene: Dict[str, Any]) -> None:
+    """Clear all tags from a video scene using existing scene data"""
+    current_tag_ids = [tag['id'] for tag in scene.get('tags', [])]
+    if current_tag_ids:
+        stash.update_scenes({
+            "ids": [scene['id']], 
+            "tag_ids": {"ids": current_tag_ids, "mode": "REMOVE"}
+        })
+        log.info(f"Cleared {len(current_tag_ids)} tags from scene {scene['id']}")
 
 def clear_all_markers_from_video(video_id: int) -> None:
     """Clear all markers from a video scene"""

@@ -238,55 +238,6 @@ def collect_incorrect_markers_and_images() -> None:
 
 # ----------------- Low Level Processing Functions -----------------
 
-async def __tag_images(images: List[Dict[str, Any]]) -> None:
-    """Tag a batch of images"""
-    async with semaphore:
-        try:
-            image_paths, image_ids, temp_files = media_handler.get_image_paths_and_ids(images)
-            
-            if not image_paths:
-                log.warning("No valid image paths found in batch")
-                return
-
-            # Process images through VLM Engine
-            results = await vlm_engine.process_images_async(
-                image_paths,
-                threshold=config.config.image_threshold,
-                return_confidence=config.config.image_confidence_return
-            )
-
-            # Process results and add tags
-            for i, result in enumerate(results.result):
-                if i < len(image_ids):
-                    image_id = image_ids[i]
-                    detected_tags = result.get('tags', [])
-                    
-                    if detected_tags:
-                        tag_ids = media_handler.get_tag_ids(detected_tags, create=True)
-                        media_handler.add_tags_to_image(image_id, tag_ids)
-                        log.info(f"Added tags {detected_tags} to image {image_id}")
-                    else:
-                        log.debug(f"No tags detected for image {image_id}")
-
-            # Remove VLM_TagMe tags from processed images
-            media_handler.remove_tagme_tags_from_images(image_ids)
-            
-        except Exception as e:
-            log.error(f"Error processing image batch: {e}")
-            # Add error tags to failed images
-            image_ids = [img['id'] for img in images]
-            media_handler.add_error_images(image_ids)
-        finally:
-            # Clean up temp files
-            for temp_file in temp_files:
-                try:
-                    if os.path.isdir(temp_file):
-                        shutil.rmtree(temp_file)
-                    else:
-                        os.remove(temp_file)
-                except Exception as e:
-                    log.debug(f"Failed to remove temp file {temp_file}: {e}")
-
 async def __tag_video_with_timing(scene: Dict[str, Any], scene_index: int) -> None:
     """Tag a single video scene with timing diagnostics"""
     start_time = asyncio.get_event_loop().time()
@@ -339,7 +290,7 @@ async def __tag_video(scene: Dict[str, Any]) -> None:
 
             if detected_tags:
                 # Clear all existing tags and markers before adding new ones
-                media_handler.clear_all_tags_from_video(scene_id)
+                media_handler.clear_all_tags_from_video(scene)
                 media_handler.clear_all_markers_from_video(scene_id)
                 
                 # Add tags to scene

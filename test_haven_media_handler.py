@@ -65,67 +65,33 @@ class TestHavenMediaHandler(unittest.TestCase):
                 {"id": 30, "name": "Tag3"}
             ]
         }
-        self.mock_stash.get_scene.return_value = mock_scene
-        
         # Call the function
-        haven_media_handler.clear_all_tags_from_video(123)
-        
-        # Verify the scene was retrieved
-        self.mock_stash.get_scene.assert_called_once_with(123)
-        
+        haven_media_handler.clear_all_tags_from_video(mock_scene)
         # Verify tags were removed
         self.mock_stash.update_scenes.assert_called_once_with({
             "ids": [123],
             "tag_ids": {"ids": [10, 20, 30], "mode": "REMOVE"}
         })
-        
         # Verify log message
-        self.mock_log.info.assert_called_once_with("Cleared all tags from scene 123")
+        self.mock_log.info.assert_called_once_with("Cleared 3 tags from scene 123")
 
     def test_clear_all_tags_from_video_no_tags(self) -> None:
         """Test clearing all tags from a video that has no tags"""
         # Mock scene without tags
         mock_scene = {"id": 123, "tags": []}
-        self.mock_stash.get_scene.return_value = mock_scene
-        
         # Call the function
-        haven_media_handler.clear_all_tags_from_video(123)
-        
-        # Verify the scene was retrieved
-        self.mock_stash.get_scene.assert_called_once_with(123)
-        
+        haven_media_handler.clear_all_tags_from_video(mock_scene)
         # Verify no update was called since there are no tags
         self.mock_stash.update_scenes.assert_not_called()
-        
         # Verify no log message
         self.mock_log.info.assert_not_called()
-
-    def test_clear_all_tags_from_video_no_scene(self) -> None:
-        """Test clearing all tags from a video that doesn't exist"""
-        # Mock scene that doesn't exist
-        self.mock_stash.get_scene.return_value = None
-        
-        # Call the function
-        haven_media_handler.clear_all_tags_from_video(123)
-        
-        # Verify the scene was retrieved
-        self.mock_stash.get_scene.assert_called_once_with(123)
-        
-        # Verify no update was called
-        self.mock_stash.update_scenes.assert_not_called()
 
     def test_clear_all_tags_from_video_scene_without_tags_key(self) -> None:
         """Test clearing all tags from a scene that doesn't have a tags key"""
         # Mock scene without tags key
         mock_scene = {"id": 123}
-        self.mock_stash.get_scene.return_value = mock_scene
-        
         # Call the function
-        haven_media_handler.clear_all_tags_from_video(123)
-        
-        # Verify the scene was retrieved
-        self.mock_stash.get_scene.assert_called_once_with(123)
-        
+        haven_media_handler.clear_all_tags_from_video(mock_scene)
         # Verify no update was called
         self.mock_stash.update_scenes.assert_not_called()
 
