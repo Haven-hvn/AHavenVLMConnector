@@ -22,7 +22,7 @@ from vlm_engine.config_models import (
 import haven_vlm_config as config
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.CRITICAL)
 logger = logging.getLogger(__name__)
 
 @dataclass
