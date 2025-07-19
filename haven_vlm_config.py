@@ -50,7 +50,7 @@ VLM_ENGINE_CONFIG = {
             "type": "vlm_model",
             "model_file_name": "vlm_multiplexer_model",
             "model_category": "actiondetection",
-            "model_id": "HuggingFaceTB/SmolVLM-Instruct",
+            "model_id": "haven-adult",
             "model_identifier": 93848,
             "model_version": "1.0",
             "use_multiplexer": True,
