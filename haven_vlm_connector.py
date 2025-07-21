@@ -12,6 +12,7 @@ import traceback
 import asyncio
 from typing import Dict, Any, List, Optional
 from datetime import datetime
+from dataclasses import replace
 
 # ----------------- Setup and Dependencies -----------------
 
@@ -263,6 +264,7 @@ async def __tag_video(scene: Dict[str, Any]) -> None:
         try:
             scene_id = scene['id']
             scene_file = scene['files'][0]['path']
+            scene_fps = scene['frame_rate']
             
             # Check if scene is VR
             is_vr = media_handler.is_vr_scene(scene['tags'])
@@ -297,6 +299,21 @@ async def __tag_video(scene: Dict[str, Any]) -> None:
                 tag_ids = media_handler.get_tag_ids(list(detected_tags), create=True)
                 media_handler.add_tags_to_video(scene_id, tag_ids)
                 log.info(f"Added tags {list(detected_tags)} to scene {scene_id}")
+
+                # Convert frames into seconds
+                new_tag_timespans = {}
+                for category, tags in video_result.tag_timespans.items():
+                    new_tags = {}
+                    for tag_name, frames in tags.items():
+                        new_tags[tag_name] = [
+                            replace(frame,
+                                    start=frame.start / scene_fps,
+                                    end=frame.end / scene_fps)
+                            for frame in frames
+                        ]
+                    new_tag_timespans[category] = new_tags
+
+                video_result.tag_timespans = new_tag_timespans
 
                 # Add markers if enabled
                 if config.config.create_markers:

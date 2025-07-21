@@ -43,9 +43,29 @@ VLM_ENGINE_CONFIG = {
     },
     "models": {
         "binary_search_processor_dynamic": {
-            "type": "binary_search_processor", 
-            "model_file_name": "binary_search_processor_dynamic"
+            "type": "binary_search_pipeline_processor", 
+            "model_file_name": "binary_search_pipeline_processor_dynamic",
+            "instance_count":10,           
+                "max_batch_size":1,       
+                "max_concurrent_requests":20, 
         },
+            "metadata_extraction_stage": {
+            "type": "metadata_extraction_stage",
+            "model_file_name": "metadata_extraction_stage",
+            "use_timestamps":True
+            },
+            "candidate_proposal_stage": {
+            "type": "candidate_proposal_stage",
+            "model_file_name": "candidate_proposal_stage"},
+            "start_refinement_stage": {
+            "type": "start_refinement_stage",
+            "model_file_name": "start_refinement_stage"},
+            "end_determination_stage": {
+            "type": "end_determination_stage",
+            "model_file_name": "end_determination_stage"},
+            "result_compilation_stage": {
+            "type": "result_compilation_stage",
+            "model_file_name": "result_compilation_stage"},
         "vlm_multiplexer_model": {
             "type": "vlm_model",
             "model_file_name": "vlm_multiplexer_model",
@@ -75,7 +95,7 @@ VLM_ENGINE_CONFIG = {
                 }
             ],
             "tag_list": [
-                "Anal Fucking", "Ass Licking", "Ass Penetration", "Ball Licking/Sucking", "Blowjob", "Cum on Person",
+                "69","Anal Fucking", "Ass Licking", "Ass Penetration", "Ball Licking/Sucking", "Blowjob", "Cum on Person",
                 "Cum Swapping", "Cumshot", "Deepthroat", "Double Penetration", "Fingering", "Fisting", "Footjob",
                 "Gangbang", "Gloryhole", "Grabbing Ass", "Grabbing Boobs", "Grabbing Hair/Head", "Handjob", "Kissing",
                 "Licking Penis", "Masturbation", "Pissing", "Pussy Licking (Clearly Visible)", "Pussy Licking",
@@ -361,7 +381,7 @@ VLM_ENGINE_CONFIG = {
 # ----------------- Processing Settings -----------------
 
 # Video processing settings
-VIDEO_FRAME_INTERVAL = 80  # Process every 80 seconds
+VIDEO_FRAME_INTERVAL = 30  # Process every 80 seconds
 VIDEO_THRESHOLD = 0.3
 VIDEO_CONFIDENCE_RETURN = True
 
