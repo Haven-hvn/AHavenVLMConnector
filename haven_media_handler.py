@@ -175,8 +175,7 @@ def get_tagme_scenes() -> List[Dict[str, Any]]:
     """Get scenes tagged with VLM_TagMe"""
     return stash.find_scenes(
         f={"tags": {"value": vlm_tagme_tag_id, "modifier": "INCLUDES"}}, 
-        fragment="id tags {id} files {path duration fingerprint(type: \"phash\")}"
-    )
+        fragment="id tags {id} files {frame_rate path duration fingerprint(type: \"phash\")}"    )
 
 def add_error_scene(scene_id: int) -> None:
     """Add error tag to a scene"""
