@@ -50,7 +50,7 @@ VLM_ENGINE_CONFIG = {
             "type": "vlm_model",
             "model_file_name": "vlm_multiplexer_model",
             "model_category": "actiondetection",
-            "model_id": "haven-adult",
+            "model_id": "zai-org/glm-4.6v-flash",
             "model_identifier": 93848,
             "model_version": "1.0",
             "use_multiplexer": True,
@@ -67,7 +67,7 @@ VLM_ENGINE_CONFIG = {
                     "is_fallback": False
                 },
                 {
-                    "base_url": "https://vlm.sinbox.fun:443/v1",
+                    "base_url": "https://cloudagnostic.com:443/v1",
                     "api_key": "",
                     "name": "cloud-fallback",
                     "weight": 0,
