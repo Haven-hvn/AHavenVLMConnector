@@ -30,9 +30,8 @@ def apply_path_mutations(path: str, mutations: Dict[str, str]) -> str:
     for old_path, new_path in mutations.items():
         if mutated_path.startswith(old_path):
             mutated_path = mutated_path.replace(old_path, new_path, 1)
-            logger.debug(f"Applied path mutation: {path} -> {mutated_path}")
             break
-    
+
     return mutated_path
 
 def ensure_directory_exists(directory_path: str) -> None:

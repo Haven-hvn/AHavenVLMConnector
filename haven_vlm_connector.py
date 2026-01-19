@@ -6,12 +6,22 @@ A StashApp plugin for Vision-Language Model based content tagging
 import os
 import sys
 import json
-import subprocess
 import shutil
 import traceback
 import asyncio
+import logging
+import time
 from typing import Dict, Any, List, Optional
 from datetime import datetime
+
+# Import and install sys.exit tracking FIRST (before any other imports that might call sys.exit)
+try:
+    from exit_tracker import install_exit_tracker
+    import stashapi.log as log
+    install_exit_tracker(log)
+except ImportError as e:
+    print(f"Warning: exit_tracker not available: {e}")
+    print("sys.exit tracking will not be available")
 
 # ----------------- Setup and Dependencies -----------------
 
@@ -24,7 +34,7 @@ try:
         "stashapi:stashapp-tools==0.2.58",
         "aiohttp==3.12.13",
         "pydantic==2.11.7",
-        "vlm-engine==0.7.2",
+        "vlm-engine==0.7.3",
         "pyyaml==6.0.2"
     )
     
@@ -71,7 +81,15 @@ video_progress: Dict[str, float] = {}
 async def main() -> None:
     """Main entry point for the plugin"""
     global semaphore
+    
+    # Semaphore initialization logging for hypothesis A
+    log.debug(f"[DEBUG_HYPOTHESIS_A] Initializing semaphore with limit {config.config.concurrent_task_limit}")
+    
     semaphore = asyncio.Semaphore(config.config.concurrent_task_limit)
+    
+    # Post-semaphore creation logging
+    log.debug(f"[DEBUG_HYPOTHESIS_A] Semaphore created successfully (limit: {config.config.concurrent_task_limit})")
+    
     json_input = read_json_input()
     output = {}
     await run(json_input, output)
@@ -120,7 +138,7 @@ async def run(json_input: Dict[str, Any], output: Dict[str, Any]) -> None:
 async def tag_videos() -> None:
     """Tag videos with VLM analysis using improved async orchestration"""
     global completed_tasks, total_tasks
-    
+
     scenes = media_handler.get_tagme_scenes()
     if not scenes:
         log.info("No videos to tag. Have you tagged any scenes with the VLM_TagMe tag to get processed?")
@@ -131,16 +149,20 @@ async def tag_videos() -> None:
     
     video_progress.clear()
     for scene in scenes:
-        video_progress[scene['id']] = 0.0
+        video_progress[scene.get('id', 'unknown')] = 0.0
     log.progress(0.0)
     
     log.info(f"🚀 Starting video processing for {total_tasks} scenes with semaphore limit of {config.config.concurrent_task_limit}")
-    
+
     # Create tasks with proper indexing for debugging
-    tasks = [
-        asyncio.create_task(__tag_video_with_timing(scene, i))
-        for i, scene in enumerate(scenes)
-    ]
+    tasks = []
+    for i, scene in enumerate(scenes):
+        # Pre-task creation logging for hypothesis A (semaphore deadlock) and E (signal termination)
+        scene_id = scene.get('id')
+        log.debug(f"[DEBUG_HYPOTHESIS_A] Creating task {i+1}/{total_tasks} for scene {scene_id}, semaphore limit: {config.config.concurrent_task_limit}")
+        
+        task = asyncio.create_task(__tag_video_with_timing(scene, i))
+        tasks.append(task)
     
     # Use asyncio.as_completed to process results as they finish (proves concurrency)
     completed_task_futures = asyncio.as_completed(tasks)
@@ -151,21 +173,17 @@ async def tag_videos() -> None:
         try:
             await completed_task
             completed_tasks += 1
-            
-            # Log progress every completed task
-            progress_percent = (completed_tasks / total_tasks) * 100
-            elapsed_time = asyncio.get_event_loop().time() - batch_start_time
-            avg_time_per_task = elapsed_time / completed_tasks if completed_tasks > 0 else 0
-            estimated_remaining = (total_tasks - completed_tasks) * avg_time_per_task
-            
-            log.info(f"🏁 Task {completed_tasks}/{total_tasks} completed ({progress_percent:.1f}%) - "
-                    f"Avg: {avg_time_per_task:.2f}s/task, Est. remaining: {estimated_remaining:.1f}s")
-                    
+
         except Exception as e:
             completed_tasks += 1
+            # Exception logging for hypothesis E (signal termination)
+            error_type = type(e).__name__
+            log.debug(f"[DEBUG_HYPOTHESIS_E] Task failed with exception: {error_type}: {str(e)} (Task {completed_tasks}/{total_tasks})")
+
             log.error(f"❌ Task failed: {e}")
-    
+
     total_time = asyncio.get_event_loop().time() - batch_start_time
+
     log.info(f"🎉 All {total_tasks} videos completed in {total_time:.2f}s (avg: {total_time/total_tasks:.2f}s/video)")
     log.progress(1.0)
 
@@ -258,14 +276,37 @@ async def __tag_video_with_timing(scene: Dict[str, Any], scene_index: int) -> No
         raise
 
 async def __tag_video(scene: Dict[str, Any]) -> None:
-    """Tag a single video scene"""
+    """Tag a single video scene with semaphore timing instrumentation"""
+    scene_id = scene.get('id')
+    
+    # Pre-semaphore acquisition logging for hypothesis A (semaphore deadlock)
+    task_start_time = asyncio.get_event_loop().time()
+    acquisition_start_time = task_start_time
+    log.debug(f"[DEBUG_HYPOTHESIS_A] Task starting for scene {scene_id} at {task_start_time:.3f}s")
+    
     async with semaphore:
         try:
-            scene_id = scene['id']
-            scene_file = scene['files'][0]['path']
+            # Semaphore acquisition successful logging
+            acquisition_end_time = asyncio.get_event_loop().time()
+            acquisition_time = acquisition_end_time - acquisition_start_time
+            log.debug(f"[DEBUG_HYPOTHESIS_A] Semaphore acquired for scene {scene_id} after {acquisition_time:.3f}s")
+        
+            if scene_id is None:
+                log.error("Scene missing 'id' field")
+                return
+            
+            files = scene.get('files', [])
+            if not files:
+                log.error(f"Scene {scene_id} has no files")
+                return
+            
+            scene_file = files[0].get('path')
+            if scene_file is None:
+                log.error(f"Scene {scene_id} file has no path")
+                return
             
             # Check if scene is VR
-            is_vr = media_handler.is_vr_scene(scene['tags'])
+            is_vr = media_handler.is_vr_scene(scene.get('tags', []))
             
             def progress_cb(p: int) -> None:
                 global video_progress, total_tasks
@@ -273,7 +314,12 @@ async def __tag_video(scene: Dict[str, Any]) -> None:
                 total_prog = sum(video_progress.values()) / total_tasks
                 log.progress(total_prog)
             
-            # Process video through VLM Engine
+            # Process video through VLM Engine with HTTP timing for hypothesis B
+            processing_start_time = asyncio.get_event_loop().time()
+            
+            # HTTP request lifecycle tracking start
+            log.debug(f"[DEBUG_HYPOTHESIS_B] Starting VLM processing for scene {scene_id}: {scene_file}")
+            
             video_result = await vlm_engine.process_video_async(
                 scene_file,
                 vr_video=is_vr,
@@ -287,6 +333,11 @@ async def __tag_video(scene: Dict[str, Any]) -> None:
             detected_tags = set()
             for category_tags in video_result.video_tags.values():
                 detected_tags.update(category_tags)
+
+            # Post-VLM processing logging
+            processing_end_time = asyncio.get_event_loop().time()
+            processing_duration = processing_end_time - processing_start_time
+            log.debug(f"[DEBUG_HYPOTHESIS_B] VLM processing completed for scene {scene_id} in {processing_duration:.2f}s ({len(detected_tags)} detected tags)")
 
             if detected_tags:
                 # Clear all existing tags and markers before adding new ones
@@ -306,16 +357,40 @@ async def __tag_video(scene: Dict[str, Any]) -> None:
             # Remove VLM_TagMe tag from processed scene
             media_handler.remove_tagme_tag_from_scene(scene_id)
             
+            # Task completion logging
+            task_end_time = asyncio.get_event_loop().time()
+            total_task_time = task_end_time - task_start_time
+            log.debug(f"[DEBUG_HYPOTHESIS_A] Task completed for scene {scene_id} in {total_task_time:.2f}s")
+            
         except Exception as e:
-            log.error(f"Error processing video scene {scene.get('id', 'unknown')}: {e}")
-            # Add error tag to failed scene
-            media_handler.add_error_scene(scene['id'])
+            # Exception handling with detailed logging for hypothesis E
+            exception_time = asyncio.get_event_loop().time()
+            error_type = type(e).__name__
+            log.debug(f"[DEBUG_HYPOTHESIS_E] Task exception for scene {scene_id}: {error_type}: {str(e)} at {exception_time:.3f}s")
+                
+            scene_id = scene.get('id', 'unknown')
+            log.error(f"Error processing video scene {scene_id}: {e}")
+            # Add error tag to failed scene if we have a valid ID
+            if scene_id != 'unknown':
+                media_handler.add_error_scene(scene_id)
 
 async def __find_marker_settings(scene: Dict[str, Any]) -> None:
     """Find optimal marker settings for a scene"""
     try:
-        scene_id = scene['id']
-        scene_file = scene['files'][0]['path']
+        scene_id = scene.get('id')
+        if scene_id is None:
+            log.error("Scene missing 'id' field")
+            return
+        
+        files = scene.get('files', [])
+        if not files:
+            log.error(f"Scene {scene_id} has no files")
+            return
+        
+        scene_file = files[0].get('path')
+        if scene_file is None:
+            log.error(f"Scene {scene_id} file has no path")
+            return
         
         # Get existing markers for the scene
         existing_markers = media_handler.get_scene_markers(scene_id)
@@ -341,13 +416,8 @@ async def __find_marker_settings(scene: Dict[str, Any]) -> None:
         log.info(json.dumps(optimal_settings, indent=2))
         
     except Exception as e:
-        log.error(f"Error finding marker settings for scene {scene.get('id', 'unknown')}: {e}")
-
-def increment_progress() -> None:
-    """Increment progress counter"""
-    global progress
-    progress += increment
-    log.info(f"Progress: {progress:.2%}")
+        scene_id = scene.get('id', 'unknown')
+        log.error(f"Error finding marker settings for scene {scene_id}: {e}")
 
 # ----------------- Cleanup -----------------
 
@@ -362,6 +432,11 @@ if __name__ == "__main__":
         asyncio.run(main())
     except KeyboardInterrupt:
         log.info("Plugin interrupted by user")
+        sys.exit(0)
+    except SystemExit as e:
+        # Re-raise system exit with the exit code
+        log.debug(f"[DEBUG_EXIT_CODE] Caught SystemExit with code: {e.code}")
+        raise
     except Exception as e:
         log.error(f"Plugin failed: {e}")
         sys.exit(1)

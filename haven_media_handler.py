@@ -140,13 +140,18 @@ def add_tags_to_video(video_id: int, tag_ids: List[int], add_tagged: bool = True
 
 def clear_all_tags_from_video(scene: Dict[str, Any]) -> None:
     """Clear all tags from a video scene using existing scene data"""
+    scene_id = scene.get('id')
+    if scene_id is None:
+        log.error("Scene missing 'id' field")
+        return
+    
     current_tag_ids = [tag['id'] for tag in scene.get('tags', [])]
     if current_tag_ids:
         stash.update_scenes({
-            "ids": [scene['id']], 
+            "ids": [scene_id], 
             "tag_ids": {"ids": current_tag_ids, "mode": "REMOVE"}
         })
-        log.info(f"Cleared {len(current_tag_ids)} tags from scene {scene['id']}")
+        log.info(f"Cleared {len(current_tag_ids)} tags from scene {scene_id}")
 
 def clear_all_markers_from_video(video_id: int) -> None:
     """Clear all markers from a video scene"""
@@ -278,9 +283,7 @@ def write_scene_marker_to_file(
         # Write to file
         with open(output_path, 'w') as f:
             json.dump(marker_data, f, indent=2)
-            
-        log.info(f"Marker data written to: {output_path}")
-        
+
     except Exception as e:
         log.error(f"Failed to write marker data: {e}")
 

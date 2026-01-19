@@ -70,9 +70,9 @@ class VideoTagInfo:
                 ]
         
         return cls(
-            video_duration=json_data["video_duration"],
-            video_tags=json_data["video_tags"],
-            tag_totals=json_data["tag_totals"],
+            video_duration=json_data.get("video_duration", 0.0),
+            video_tags=json_data.get("video_tags", {}),
+            tag_totals=json_data.get("tag_totals", {}),
             tag_timespans=tag_timespans
         )
 
