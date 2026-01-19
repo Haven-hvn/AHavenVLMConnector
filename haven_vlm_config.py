@@ -54,8 +54,7 @@ VLM_ENGINE_CONFIG = {
             "model_identifier": 93848,
             "model_version": "1.0",
             "use_multiplexer": True,
-            "max_concurrent_requests": 40,
-            "connection_pool_size": 100,
+            "max_concurrent_requests": 13,
             "instance_count": 10,
             "max_batch_size": 4,
             "multiplexer_endpoints": [
@@ -63,15 +62,17 @@ VLM_ENGINE_CONFIG = {
                     "base_url": "http://localhost:1234/v1",
                     "api_key": "",
                     "name": "lm-studio-primary",
-                    "weight": 5,
-                    "is_fallback": False
+                    "weight": 9,
+                    "is_fallback": False,
+                    "max_concurrent": 10
                 },
                 {
                     "base_url": "https://cloudagnostic.com:443/v1",
                     "api_key": "",
                     "name": "cloud-fallback",
-                    "weight": 0,
-                    "is_fallback": True
+                    "weight": 1,
+                    "is_fallback": True,
+                    "max_concurrent": 2
                 }
             ],
             "tag_list": [

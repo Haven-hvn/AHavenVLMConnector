@@ -132,10 +132,26 @@ class HavenVLMEngine:
                 models=models
             )
 
-        # Create model configs
+        # Create model configs with new architectural changes
         models = {}
         for model_name, model_data in vlm_config["models"].items():
             if model_data["type"] == "vlm_model":
+                # Process multiplexer_endpoints and validate max_concurrent
+                multiplexer_endpoints = []
+                for endpoint in model_data.get("multiplexer_endpoints", []):
+                    # Validate that max_concurrent is present
+                    if "max_concurrent" not in endpoint:
+                        raise ValueError(f"Endpoint '{endpoint.get('name', 'unnamed')}' is missing required 'max_concurrent' parameter")
+                    
+                    multiplexer_endpoints.append({
+                        "base_url": endpoint["base_url"],
+                        "api_key": endpoint.get("api_key", ""),
+                        "name": endpoint["name"],
+                        "weight": endpoint.get("weight", 5),
+                        "is_fallback": endpoint.get("is_fallback", False),
+                        "max_concurrent": endpoint["max_concurrent"]
+                    })
+                
                 models[model_name] = ModelConfig(
                     type=model_data["type"],
                     model_file_name=model_data["model_file_name"],
@@ -147,8 +163,7 @@ class HavenVLMEngine:
                     max_concurrent_requests=model_data.get("max_concurrent_requests", 10),
                     instance_count=model_data.get("instance_count",1),
                     max_batch_size=model_data.get("max_batch_size",1),
-                    connection_pool_size=model_data.get("connection_pool_size", 20),
-                    multiplexer_endpoints=model_data.get("multiplexer_endpoints", []),
+                    multiplexer_endpoints=multiplexer_endpoints,
                     tag_list=model_data.get("tag_list", [])
                 )
             else:
