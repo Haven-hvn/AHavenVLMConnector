@@ -81,14 +81,8 @@ video_progress: Dict[str, float] = {}
 async def main() -> None:
     """Main entry point for the plugin"""
     global semaphore
-    
-    # Semaphore initialization logging for hypothesis A
-    log.debug(f"[DEBUG_HYPOTHESIS_A] Initializing semaphore with limit {config.config.concurrent_task_limit}")
-    
+
     semaphore = asyncio.Semaphore(config.config.concurrent_task_limit)
-    
-    # Post-semaphore creation logging
-    log.debug(f"[DEBUG_HYPOTHESIS_A] Semaphore created successfully (limit: {config.config.concurrent_task_limit})")
     
     json_input = read_json_input()
     output = {}
@@ -159,8 +153,7 @@ async def tag_videos() -> None:
     for i, scene in enumerate(scenes):
         # Pre-task creation logging for hypothesis A (semaphore deadlock) and E (signal termination)
         scene_id = scene.get('id')
-        log.debug(f"[DEBUG_HYPOTHESIS_A] Creating task {i+1}/{total_tasks} for scene {scene_id}, semaphore limit: {config.config.concurrent_task_limit}")
-        
+
         task = asyncio.create_task(__tag_video_with_timing(scene, i))
         tasks.append(task)
     
@@ -282,15 +275,13 @@ async def __tag_video(scene: Dict[str, Any]) -> None:
     # Pre-semaphore acquisition logging for hypothesis A (semaphore deadlock)
     task_start_time = asyncio.get_event_loop().time()
     acquisition_start_time = task_start_time
-    log.debug(f"[DEBUG_HYPOTHESIS_A] Task starting for scene {scene_id} at {task_start_time:.3f}s")
-    
+
     async with semaphore:
         try:
             # Semaphore acquisition successful logging
             acquisition_end_time = asyncio.get_event_loop().time()
             acquisition_time = acquisition_end_time - acquisition_start_time
-            log.debug(f"[DEBUG_HYPOTHESIS_A] Semaphore acquired for scene {scene_id} after {acquisition_time:.3f}s")
-        
+
             if scene_id is None:
                 log.error("Scene missing 'id' field")
                 return
@@ -360,8 +351,7 @@ async def __tag_video(scene: Dict[str, Any]) -> None:
             # Task completion logging
             task_end_time = asyncio.get_event_loop().time()
             total_task_time = task_end_time - task_start_time
-            log.debug(f"[DEBUG_HYPOTHESIS_A] Task completed for scene {scene_id} in {total_task_time:.2f}s")
-            
+
         except Exception as e:
             # Exception handling with detailed logging for hypothesis E
             exception_time = asyncio.get_event_loop().time()
