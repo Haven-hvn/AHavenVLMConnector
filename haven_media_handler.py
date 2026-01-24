@@ -6,6 +6,7 @@ Handles StashApp media operations and tag management
 import os
 import zipfile
 import shutil
+import logging
 from typing import List, Dict, Any, Optional, Tuple, Set
 from datetime import datetime
 import json
