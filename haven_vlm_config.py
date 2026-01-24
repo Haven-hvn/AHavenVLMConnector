@@ -43,7 +43,7 @@ VLM_ENGINE_CONFIG = {
     "models": {
         "binary_search_processor_dynamic": {
             "type": "binary_search_processor", 
-            "model_file_name": "binary_search_processor_dynamic"
+            "function_name": "binary_search_processor_dynamic"
         },
         "vlm_multiplexer_model": {
             "type": "vlm_model",
@@ -82,19 +82,19 @@ VLM_ENGINE_CONFIG = {
         },
         "result_coalescer": {
             "type": "python", 
-            "model_file_name": "result_coalescer"
+            "function_name": "result_coalescer"
         },
         "result_finisher": {
             "type": "python", 
-            "model_file_name": "result_finisher"
+            "function_name": "result_finisher"
         },
         "batch_awaiter": {
             "type": "python", 
-            "model_file_name": "batch_awaiter"
+            "function_name": "batch_awaiter"
         },
         "video_result_postprocessor": {
             "type": "python", 
-            "model_file_name": "video_result_postprocessor"
+            "function_name": "video_result_postprocessor"
         },
     },
     "category_config": {

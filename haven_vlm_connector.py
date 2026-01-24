@@ -27,7 +27,7 @@ try:
         "stashapi:stashapp-tools==0.2.58",
         "aiohttp==3.12.13",
         "pydantic==2.11.7",
-        "vlm-engine==0.8.0",
+        "vlm-engine==0.8.1",
         "pyyaml==6.0.2"
     )
     
@@ -164,7 +164,7 @@ async def tag_videos() -> None:
             completed_tasks += 1
             # Exception logging for hypothesis E (signal termination)
             error_type = type(e).__name__
-            log.debug(f"[DEBUG_HYPOTHESIS_E] Task failed with exception: {error_type}: {str(e)} (Task {completed_tasks}/{total_tasks})")
+            log.debug(f"[PROBLEM] Task failed with exception: {error_type}: {str(e)} (Task {completed_tasks}/{total_tasks})")
 
             log.error(f"❌ Task failed: {e}")
 
