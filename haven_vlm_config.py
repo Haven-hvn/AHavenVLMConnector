@@ -26,10 +26,10 @@ VLM_ENGINE_CONFIG = {
                 "skipped_categories",
             ],
             "output": "results",
-            "version": 1.0,
+            "version": 2.0,
             "models": [
                 {
-                    "name": "vlm_multiplexer_model",
+                    "name": "video_analysis_pipeline",
                     "inputs": [
                         "video_path", "return_timestamps", "time_interval",
                         "threshold", "return_confidence", "vr_video",
