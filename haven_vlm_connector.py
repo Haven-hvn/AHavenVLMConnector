@@ -14,6 +14,17 @@ import time
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 
+# Configure logging
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler('haven_vlm_debug.log')
+    ]
+)
+logger = logging.getLogger(__name__)
+
 import stashapi.log as log
 
 # ----------------- Setup and Dependencies -----------------
@@ -27,7 +38,7 @@ try:
         "stashapi:stashapp-tools==0.2.58",
         "aiohttp==3.12.13",
         "pydantic==2.11.7",
-        "vlm-engine==0.8.1",
+        "vlm-engine==0.8.2",
         "pyyaml==6.0.2"
     )
     

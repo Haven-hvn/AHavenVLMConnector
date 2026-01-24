@@ -22,7 +22,14 @@ from vlm_engine.config_models import (
 import haven_vlm_config as config
 
 # Configure logging
-logging.basicConfig(level=logging.CRITICAL)
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler('haven_vlm_debug.log')
+    ]
+)
 logger = logging.getLogger(__name__)
 
 @dataclass
