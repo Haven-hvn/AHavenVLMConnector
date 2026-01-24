@@ -127,7 +127,6 @@ class HavenVLMEngine:
             pipelines[pipeline_name] = PipelineConfig(
                 inputs=pipeline_data["inputs"],
                 output=pipeline_data["output"],
-                short_name=pipeline_data["short_name"],
                 version=pipeline_data["version"],
                 models=models
             )
@@ -154,22 +153,14 @@ class HavenVLMEngine:
                 
                 models[model_name] = ModelConfig(
                     type=model_data["type"],
-                    model_file_name=model_data["model_file_name"],
                     model_category=model_data["model_category"],
                     model_id=model_data["model_id"],
-                    model_identifier=model_data["model_identifier"],
-                    model_version=model_data["model_version"],
-                    use_multiplexer=model_data.get("use_multiplexer", False),
-                    max_concurrent_requests=model_data.get("max_concurrent_requests", 10),
-                    instance_count=model_data.get("instance_count",1),
-                    max_batch_size=model_data.get("max_batch_size",1),
                     multiplexer_endpoints=multiplexer_endpoints,
                     tag_list=model_data.get("tag_list", [])
                 )
             else:
                 models[model_name] = ModelConfig(
-                    type=model_data["type"],
-                    model_file_name=model_data["model_file_name"]
+                    type=model_data["type"]
                 )
 
         return EngineConfig(

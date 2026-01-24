@@ -26,7 +26,6 @@ VLM_ENGINE_CONFIG = {
                 "skipped_categories",
             ],
             "output": "results",
-            "short_name": "dynamic_video",
             "version": 1.0,
             "models": [
                 {
@@ -48,11 +47,8 @@ VLM_ENGINE_CONFIG = {
         },
         "vlm_multiplexer_model": {
             "type": "vlm_model",
-            "model_file_name": "vlm_multiplexer_model",
-            "model_category": "actiondetection",
+            "model_category": "humanactivityevaluation",
             "model_id": "zai-org/glm-4.6v-flash",
-            "model_identifier": 93848,
-            "model_version": "1.0",
             "use_multiplexer": True,
             "max_concurrent_requests": 13,
             "instance_count": 10,
@@ -102,7 +98,7 @@ VLM_ENGINE_CONFIG = {
         },
     },
     "category_config": {
-        "actiondetection": {
+        "humanactivityevaluation": {
             "69": {
                 "RenamedTag": "69",
                 "MinMarkerDuration": "1s",

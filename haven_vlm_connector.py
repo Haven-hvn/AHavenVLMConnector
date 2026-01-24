@@ -14,14 +14,7 @@ import time
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 
-# Import and install sys.exit tracking FIRST (before any other imports that might call sys.exit)
-try:
-    from exit_tracker import install_exit_tracker
-    import stashapi.log as log
-    install_exit_tracker(log)
-except ImportError as e:
-    print(f"Warning: exit_tracker not available: {e}")
-    print("sys.exit tracking will not be available")
+import stashapi.log as log
 
 # ----------------- Setup and Dependencies -----------------
 
@@ -34,7 +27,7 @@ try:
         "stashapi:stashapp-tools==0.2.58",
         "aiohttp==3.12.13",
         "pydantic==2.11.7",
-        "vlm-engine==0.7.9",
+        "vlm-engine==0.8.0",
         "pyyaml==6.0.2"
     )
     
