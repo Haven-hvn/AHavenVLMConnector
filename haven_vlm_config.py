@@ -29,10 +29,10 @@ VLM_ENGINE_CONFIG = {
             "version": 1.0,
             "models": [
                 {
-                    "name": "dynamic_video_ai",
+                    "name": "vlm_multiplexer_model",
                     "inputs": [
-                        "video_path", "return_timestamps", "time_interval", 
-                        "threshold", "return_confidence", "vr_video", 
+                        "video_path", "return_timestamps", "time_interval",
+                        "threshold", "return_confidence", "vr_video",
                         "existing_video_data", "skipped_categories"
                     ],
                     "outputs": "results",
