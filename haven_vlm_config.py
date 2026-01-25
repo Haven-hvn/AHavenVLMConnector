@@ -6,6 +6,7 @@ A StashApp plugin for Vision-Language Model based content tagging
 from typing import Dict, List, Optional
 from dataclasses import dataclass
 import os
+import yaml
 
 # ----------------- Core Settings -----------------
 
@@ -413,22 +414,32 @@ class VLMConnectorConfig:
     create_markers: bool
     path_mutation: Dict
 
+def load_config_from_yaml(config_path: Optional[str] = None) -> VLMConnectorConfig:
+    """Load configuration from YAML file or use defaults"""
+    if config_path and os.path.exists(config_path):
+        with open(config_path, 'r') as f:
+            yaml_config = yaml.safe_load(f)
+            return VLMConnectorConfig(**yaml_config)
+    
+    # Return default configuration
+    return VLMConnectorConfig(
+        vlm_engine_config=VLM_ENGINE_CONFIG,
+        video_frame_interval=VIDEO_FRAME_INTERVAL,
+        video_threshold=VIDEO_THRESHOLD,
+        video_confidence_return=VIDEO_CONFIDENCE_RETURN,
+        concurrent_task_limit=CONCURRENT_TASK_LIMIT,
+        server_timeout=SERVER_TIMEOUT,
+        vlm_base_tag_name=VLM_BASE_TAG_NAME,
+        vlm_tagme_tag_name=VLM_TAGME_TAG_NAME,
+        vlm_updateme_tag_name=VLM_UPDATEME_TAG_NAME,
+        vlm_tagged_tag_name=VLM_TAGGED_TAG_NAME,
+        vlm_errored_tag_name=VLM_ERRORED_TAG_NAME,
+        vlm_incorrect_tag_name=VLM_INCORRECT_TAG_NAME,
+        output_data_dir=OUTPUT_DATA_DIR,
+        delete_incorrect_markers=DELETE_INCORRECT_MARKERS,
+        create_markers=CREATE_MARKERS,
+        path_mutation=PATH_MUTATION
+    )
+
 # Global configuration instance
-config = VLMConnectorConfig(
-    vlm_engine_config=VLM_ENGINE_CONFIG,
-    video_frame_interval=VIDEO_FRAME_INTERVAL,
-    video_threshold=VIDEO_THRESHOLD,
-    video_confidence_return=VIDEO_CONFIDENCE_RETURN,
-    concurrent_task_limit=CONCURRENT_TASK_LIMIT,
-    server_timeout=SERVER_TIMEOUT,
-    vlm_base_tag_name=VLM_BASE_TAG_NAME,
-    vlm_tagme_tag_name=VLM_TAGME_TAG_NAME,
-    vlm_updateme_tag_name=VLM_UPDATEME_TAG_NAME,
-    vlm_tagged_tag_name=VLM_TAGGED_TAG_NAME,
-    vlm_errored_tag_name=VLM_ERRORED_TAG_NAME,
-    vlm_incorrect_tag_name=VLM_INCORRECT_TAG_NAME,
-    output_data_dir=OUTPUT_DATA_DIR,
-    delete_incorrect_markers=DELETE_INCORRECT_MARKERS,
-    create_markers=CREATE_MARKERS,
-    path_mutation=PATH_MUTATION
-)
+config = load_config_from_yaml()
