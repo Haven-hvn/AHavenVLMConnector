@@ -167,7 +167,8 @@ class HavenVLMEngine:
                 )
             else:
                 models[model_name] = ModelConfig(
-                    type=model_data["type"]
+                    type=model_data["type"],
+                    function_name=model_data.get("function_name")
                 )
 
         return EngineConfig(
