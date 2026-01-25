@@ -52,7 +52,7 @@ A --> E[Cloud Endpoint]
 [LM Studio](https://lmstudio.ai/) provides the easiest way to configure local endpoints:
 
 1. Download and install [LM Studio](https://lmstudio.ai/)
-2. Search for or download a vision-capable model like Haven VLM - https://havenmodels.orbiter.website/
+2. [Search for or download](https://huggingface.co/models) a vision-capable model; tested with : (in order of high to low accuracy) zai-org/glm-4.6v-flash, huihui-mistral-small-3.2-24b-instruct-2506-abliterated-v2, qwen/qwen3-vl-8b, lfm2.5-vl
 3. Load your desired Model
 4. On the developer tab start the local server using the start toggle
 5. Optionally click the Settings gear then toggle *Serve on local network*
