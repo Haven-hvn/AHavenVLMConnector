@@ -4,14 +4,10 @@ A StashApp plugin for Vision-Language Model (VLM) based content tagging and anal
 
 ## Features
 
-- **Flexible Deployment**: Run on your local hardware (CPU or GPU) or balance load across multiple machines on your local network
 - **Local Network Empowerment**: Distribute processing across home/office computers without cloud dependencies
 - **Context-Aware Detection**: Leverages Vision-Language Models' understanding of visual relationships
-- **Modular Architecture**: Configurable pipeline with customizable processing stages
-- **Asynchronous Processing**: Built on asyncio for efficient video and image handling
-- **Production Ready**: Robust retry logic, error handling, and comprehensive logging
-- **Multiplexer Support**: Intelligent load balancing across multiple endpoints with automatic failover
 - **Advanced Dependency Management**: Uses PythonDepManager for automatic dependency installation
+- **Enjoying Funscript Haven?** Check out more tools and projects at https://github.com/Haven-hvn
 
 ## Requirements
 
@@ -138,7 +134,10 @@ Use any OpenAI-compatible models that support:
 - Vision capabilities with image input
 - Local deployment options
 
-## License
-MIT License - see LICENSE for details
+### Log Messages
 
-## Changelog
+Check StashApp logs for detailed processing information and error messages.
+
+## License
+
+This project is part of the StashApp Community Scripts collection.
