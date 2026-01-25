@@ -14,18 +14,14 @@ import time
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 
-# Configure logging
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(),
-        logging.FileHandler('haven_vlm_debug.log')
-    ]
-)
-logger = logging.getLogger(__name__)
-
-import stashapi.log as log
+# Import and install sys.exit tracking FIRST (before any other imports that might call sys.exit)
+try:
+    from exit_tracker import install_exit_tracker
+    import stashapi.log as log
+    install_exit_tracker(log)
+except ImportError as e:
+    print(f"Warning: exit_tracker not available: {e}")
+    print("sys.exit tracking will not be available")
 
 # ----------------- Setup and Dependencies -----------------
 
@@ -38,7 +34,7 @@ try:
         "stashapi:stashapp-tools==0.2.58",
         "aiohttp==3.12.13",
         "pydantic==2.11.7",
-        "vlm-engine==0.8.9",
+        "vlm-engine==0.9.0",
         "pyyaml==6.0.2"
     )
     
@@ -85,8 +81,14 @@ video_progress: Dict[str, float] = {}
 async def main() -> None:
     """Main entry point for the plugin"""
     global semaphore
-
+    
+    # Semaphore initialization logging for hypothesis A
+    log.debug(f"[DEBUG_HYPOTHESIS_A] Initializing semaphore with limit {config.config.concurrent_task_limit}")
+    
     semaphore = asyncio.Semaphore(config.config.concurrent_task_limit)
+    
+    # Post-semaphore creation logging
+    log.debug(f"[DEBUG_HYPOTHESIS_A] Semaphore created successfully (limit: {config.config.concurrent_task_limit})")
     
     json_input = read_json_input()
     output = {}
@@ -157,7 +159,8 @@ async def tag_videos() -> None:
     for i, scene in enumerate(scenes):
         # Pre-task creation logging for hypothesis A (semaphore deadlock) and E (signal termination)
         scene_id = scene.get('id')
-
+        log.debug(f"[DEBUG_HYPOTHESIS_A] Creating task {i+1}/{total_tasks} for scene {scene_id}, semaphore limit: {config.config.concurrent_task_limit}")
+        
         task = asyncio.create_task(__tag_video_with_timing(scene, i))
         tasks.append(task)
     
@@ -175,7 +178,7 @@ async def tag_videos() -> None:
             completed_tasks += 1
             # Exception logging for hypothesis E (signal termination)
             error_type = type(e).__name__
-            log.debug(f"[PROBLEM] Task failed with exception: {error_type}: {str(e)} (Task {completed_tasks}/{total_tasks})")
+            log.debug(f"[DEBUG_HYPOTHESIS_E] Task failed with exception: {error_type}: {str(e)} (Task {completed_tasks}/{total_tasks})")
 
             log.error(f"❌ Task failed: {e}")
 
@@ -279,13 +282,15 @@ async def __tag_video(scene: Dict[str, Any]) -> None:
     # Pre-semaphore acquisition logging for hypothesis A (semaphore deadlock)
     task_start_time = asyncio.get_event_loop().time()
     acquisition_start_time = task_start_time
-
+    log.debug(f"[DEBUG_HYPOTHESIS_A] Task starting for scene {scene_id} at {task_start_time:.3f}s")
+    
     async with semaphore:
         try:
             # Semaphore acquisition successful logging
             acquisition_end_time = asyncio.get_event_loop().time()
             acquisition_time = acquisition_end_time - acquisition_start_time
-
+            log.debug(f"[DEBUG_HYPOTHESIS_A] Semaphore acquired for scene {scene_id} after {acquisition_time:.3f}s")
+        
             if scene_id is None:
                 log.error("Scene missing 'id' field")
                 return
@@ -355,7 +360,8 @@ async def __tag_video(scene: Dict[str, Any]) -> None:
             # Task completion logging
             task_end_time = asyncio.get_event_loop().time()
             total_task_time = task_end_time - task_start_time
-
+            log.debug(f"[DEBUG_HYPOTHESIS_A] Task completed for scene {scene_id} in {total_task_time:.2f}s")
+            
         except Exception as e:
             # Exception handling with detailed logging for hypothesis E
             exception_time = asyncio.get_event_loop().time()

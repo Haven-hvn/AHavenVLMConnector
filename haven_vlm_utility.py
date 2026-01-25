@@ -10,15 +10,6 @@ from typing import Dict, Any, List, Optional, Union
 from pathlib import Path
 import yaml
 
-# Configure logging
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(),
-        logging.FileHandler('haven_vlm_debug.log')
-    ]
-)
 logger = logging.getLogger(__name__)
 
 def apply_path_mutations(path: str, mutations: Dict[str, str]) -> str:

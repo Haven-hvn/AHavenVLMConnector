@@ -6,21 +6,9 @@ Handles StashApp media operations and tag management
 import os
 import zipfile
 import shutil
-import logging
 from typing import List, Dict, Any, Optional, Tuple, Set
 from datetime import datetime
 import json
-
-# Configure logging
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(),
-        logging.FileHandler('haven_vlm_debug.log')
-    ]
-)
-logger = logging.getLogger(__name__)
 
 # Use PythonDepManager for dependency management
 try:

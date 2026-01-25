@@ -6,7 +6,6 @@ A StashApp plugin for Vision-Language Model based content tagging
 from typing import Dict, List, Optional
 from dataclasses import dataclass
 import os
-import yaml
 
 # ----------------- Core Settings -----------------
 
@@ -26,13 +25,14 @@ VLM_ENGINE_CONFIG = {
                 "skipped_categories",
             ],
             "output": "results",
-            "version": 2.0,
+            "short_name": "dynamic_video",
+            "version": 1.0,
             "models": [
                 {
-                    "name": "video_analysis_pipeline",
+                    "name": "dynamic_video_ai",
                     "inputs": [
-                        "video_path", "return_timestamps", "time_interval",
-                        "threshold", "return_confidence", "vr_video",
+                        "video_path", "return_timestamps", "time_interval", 
+                        "threshold", "return_confidence", "vr_video", 
                         "existing_video_data", "skipped_categories"
                     ],
                     "outputs": "results",
@@ -43,12 +43,15 @@ VLM_ENGINE_CONFIG = {
     "models": {
         "binary_search_processor_dynamic": {
             "type": "binary_search_processor", 
-            "function_name": "binary_search_processor_dynamic"
+            "model_file_name": "binary_search_processor_dynamic"
         },
         "vlm_multiplexer_model": {
             "type": "vlm_model",
-            "model_category": "humanactivityevaluation",
+            "model_file_name": "vlm_multiplexer_model",
+            "model_category": "actiondetection",
             "model_id": "zai-org/glm-4.6v-flash",
+            "model_identifier": 93848,
+            "model_version": "1.0",
             "use_multiplexer": True,
             "max_concurrent_requests": 13,
             "instance_count": 10,
@@ -82,23 +85,23 @@ VLM_ENGINE_CONFIG = {
         },
         "result_coalescer": {
             "type": "python", 
-            "function_name": "result_coalescer"
+            "model_file_name": "result_coalescer"
         },
         "result_finisher": {
             "type": "python", 
-            "function_name": "result_finisher"
+            "model_file_name": "result_finisher"
         },
         "batch_awaiter": {
             "type": "python", 
-            "function_name": "batch_awaiter"
+            "model_file_name": "batch_awaiter"
         },
         "video_result_postprocessor": {
             "type": "python", 
-            "function_name": "video_result_postprocessor"
+            "model_file_name": "video_result_postprocessor"
         },
     },
     "category_config": {
-        "humanactivityevaluation": {
+        "actiondetection": {
             "69": {
                 "RenamedTag": "69",
                 "MinMarkerDuration": "1s",
@@ -410,32 +413,22 @@ class VLMConnectorConfig:
     create_markers: bool
     path_mutation: Dict
 
-def load_config_from_yaml(config_path: Optional[str] = None) -> VLMConnectorConfig:
-    """Load configuration from YAML file or use defaults"""
-    if config_path and os.path.exists(config_path):
-        with open(config_path, 'r') as f:
-            yaml_config = yaml.safe_load(f)
-            return VLMConnectorConfig(**yaml_config)
-    
-    # Return default configuration
-    return VLMConnectorConfig(
-        vlm_engine_config=VLM_ENGINE_CONFIG,
-        video_frame_interval=VIDEO_FRAME_INTERVAL,
-        video_threshold=VIDEO_THRESHOLD,
-        video_confidence_return=VIDEO_CONFIDENCE_RETURN,
-        concurrent_task_limit=CONCURRENT_TASK_LIMIT,
-        server_timeout=SERVER_TIMEOUT,
-        vlm_base_tag_name=VLM_BASE_TAG_NAME,
-        vlm_tagme_tag_name=VLM_TAGME_TAG_NAME,
-        vlm_updateme_tag_name=VLM_UPDATEME_TAG_NAME,
-        vlm_tagged_tag_name=VLM_TAGGED_TAG_NAME,
-        vlm_errored_tag_name=VLM_ERRORED_TAG_NAME,
-        vlm_incorrect_tag_name=VLM_INCORRECT_TAG_NAME,
-        output_data_dir=OUTPUT_DATA_DIR,
-        delete_incorrect_markers=DELETE_INCORRECT_MARKERS,
-        create_markers=CREATE_MARKERS,
-        path_mutation=PATH_MUTATION
-    )
-
 # Global configuration instance
-config = load_config_from_yaml()
+config = VLMConnectorConfig(
+    vlm_engine_config=VLM_ENGINE_CONFIG,
+    video_frame_interval=VIDEO_FRAME_INTERVAL,
+    video_threshold=VIDEO_THRESHOLD,
+    video_confidence_return=VIDEO_CONFIDENCE_RETURN,
+    concurrent_task_limit=CONCURRENT_TASK_LIMIT,
+    server_timeout=SERVER_TIMEOUT,
+    vlm_base_tag_name=VLM_BASE_TAG_NAME,
+    vlm_tagme_tag_name=VLM_TAGME_TAG_NAME,
+    vlm_updateme_tag_name=VLM_UPDATEME_TAG_NAME,
+    vlm_tagged_tag_name=VLM_TAGGED_TAG_NAME,
+    vlm_errored_tag_name=VLM_ERRORED_TAG_NAME,
+    vlm_incorrect_tag_name=VLM_INCORRECT_TAG_NAME,
+    output_data_dir=OUTPUT_DATA_DIR,
+    delete_incorrect_markers=DELETE_INCORRECT_MARKERS,
+    create_markers=CREATE_MARKERS,
+    path_mutation=PATH_MUTATION
+)
